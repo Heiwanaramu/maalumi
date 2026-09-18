@@ -1,45 +1,62 @@
-name: Bi-Daily App Release
-
+name: Build & Release DMG
 on:
   schedule:
     - cron: '0 0 */2 * *'
   workflow_dispatch:
-  push:
-    tags:
-      - 'v*'
-
+permissions:
+  contents: write
 jobs:
-  build-and-release:
-    runs-on: macos-latest
-    permissions:
-      contents: write
-
+  build:
+    runs-on: macos-14
     steps:
-      - name: Checkout maalumi
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - name: Pull Latest Core
+        run: swift package update
+      - name: Build Binary
+        run: swift build -c release
+      - name: Package DMG
+        run: |
+          mkdir -p dist/Maalumi.app/Contents/MacOS
+          mkdir -p dist/Maalumi.app/Contents/Resources
+          cp .build/release/Maalumi dist/Maalumi.app/Contents/MacOS/Maalumi
+          cp AppIcon.icns dist/Maalumi.app/Contents/Resources/AppIcon.icns
+          
+          cat << 'PLIST' > dist/Maalumi.app/Contents/Info.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>CFBundleExecutable</key>
+              <string>Maalumi</string>
+              <key>CFBundleIdentifier</key>
+              <string>com.maalumi.browser</string>
+              <key>CFBundleName</key>
+              <string>Maalumi</string>
+              <key>CFBundleIconFile</key>
+              <string>AppIcon</string>
+              <key>CFBundlePackageType</key>
+              <string>APPL</string>
+              <key>CFBundleShortVersionString</key>
+              <string>1.0.0</string>
+              <key>LSMinimumSystemVersion</key>
+              <string>13.0</string>
+              <key>NSHighResolutionCapable</key>
+              <true/>
+          </dict>
+          </plist>
+          PLIST
+          
+          # FIX: Ad-hoc signature to prevent macOS Gatekeeper "Damaged" error
+          codesign --force --deep --sign - dist/Maalumi.app
+          
+          mkdir -p dist/dmg_root
+          cp -R dist/Maalumi.app dist/dmg_root/
+          ln -s /Applications dist/dmg_root/Applications
+          hdiutil create -volname "Maalumi Installer" -srcfolder dist/dmg_root -ov -format UDZO Maalumi.dmg
+      - name: Publish Release
+        uses: softprops/action-gh-release@v1
         with:
-          fetch-depth: 0
-
-      - name: Build Maalumi and Package DMG
-        run: |
-          chmod +x scripts/package_dmg.sh
-          ./scripts/package_dmg.sh
-
-      - name: Determine Release Tag
-        id: vars
-        run: |
-          if [ -n "$GITHUB_REF_NAME" ] && [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            TAG="$GITHUB_REF_NAME"
-          else
-            TAG="v$(date +'%Y.%m.%d.%H%M')"
-          fi
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-
-      - name: Create GitHub Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG_NAME: ${{ steps.vars.outputs.tag }}
-        run: |
-          gh release create "$TAG_NAME" dist/Maalumi.dmg \
-            --title "Maalumi $TAG_NAME" \
-            --notes "Automated release of Maalumi Browser. Includes the latest Brave core engine updates and LumiShields protections."
+          files: Maalumi.dmg
+          tag_name: "v1.0.${{ github.run_number }}-alpha"
+          name: "Maalumi Alpha"
+          prerelease: true
