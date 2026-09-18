@@ -19,7 +19,7 @@ jobs:
           mkdir -p dist/Maalumi.app/Contents/MacOS
           mkdir -p dist/Maalumi.app/Contents/Resources
           cp .build/release/Maalumi dist/Maalumi.app/Contents/MacOS/Maalumi
-          cp AppIcon.icns dist/Maalumi.app/Contents/Resources/AppIcon.icns
+          cp Resources/AppIcon.icns dist/Maalumi.app/Contents/Resources/AppIcon.icns
           
           cat << 'PLIST' > dist/Maalumi.app/Contents/Info.plist
           <?xml version="1.0" encoding="UTF-8"?>
