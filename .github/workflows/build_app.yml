@@ -1,0 +1,45 @@
+name: Bi-Daily App Release
+
+on:
+  schedule:
+    - cron: '0 0 */2 * *'
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout maalumi
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build Maalumi and Package DMG
+        run: |
+          chmod +x scripts/package_dmg.sh
+          ./scripts/package_dmg.sh
+
+      - name: Determine Release Tag
+        id: vars
+        run: |
+          if [ -n "$GITHUB_REF_NAME" ] && [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            TAG="$GITHUB_REF_NAME"
+          else
+            TAG="v$(date +'%Y.%m.%d.%H%M')"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ steps.vars.outputs.tag }}
+        run: |
+          gh release create "$TAG_NAME" dist/Maalumi.dmg \
+            --title "Maalumi $TAG_NAME" \
+            --notes "Automated release of Maalumi Browser. Includes the latest Brave core engine updates and LumiShields protections."
