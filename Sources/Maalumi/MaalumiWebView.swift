@@ -29,6 +29,7 @@ struct MaalumiWebView: NSViewRepresentable {
 
     // MARK: Coordinator
 
+    @MainActor
     final class Coordinator: NSObject, WKUIDelegate, WKNavigationDelegate {
         let viewModel: WebViewModel
         init(viewModel: WebViewModel) { self.viewModel = viewModel }

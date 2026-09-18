@@ -9,31 +9,15 @@ struct MaalumiSettingsView: View {
     @State private var selectedPage: String = "shields"
 
     var body: some View {
-        Group {
-            if #available(macOS 15.0, *) {
-                TabView(selection: $selectedPage) {
-                    Tab("Shields & Privacy", systemImage: "checkmark.shield", value: "shields") { ShieldsPrivacyContent() }
-                    Tab("Filter Lists", systemImage: "line.3.horizontal.decrease", value: "filters") { FilterListsView() }
-                    Tab("Search", systemImage: "magnifyingglass", value: "search") { SearchEnginesContent() }
-                    Tab("Appearance", systemImage: "paintpalette", value: "appearance") { AppearanceContent() }
-                    Tab("New Tab", systemImage: "square.grid.2x2", value: "newTab") { NewTabContent() }
-                    Tab("Media", systemImage: "play.circle", value: "media") { MediaContent() }
-                    Tab("Advanced", systemImage: "gearshape.2", value: "advanced") { AdvancedContent() }
-                    Tab("About", systemImage: "info.circle", value: "about") { AboutContent() }
-                }
-                .tabViewStyle(.sidebarAdaptable)
-            } else {
-                TabView(selection: $selectedPage) {
-                    ShieldsPrivacyContent().tabItem { Label("Shields", systemImage: "checkmark.shield") }.tag("shields")
-                    FilterListsView().tabItem { Label("Filters", systemImage: "line.3.horizontal.decrease") }.tag("filters")
-                    SearchEnginesContent().tabItem { Label("Search", systemImage: "magnifyingglass") }.tag("search")
-                    AppearanceContent().tabItem { Label("Appearance", systemImage: "paintpalette") }.tag("appearance")
-                    NewTabContent().tabItem { Label("New Tab", systemImage: "square.grid.2x2") }.tag("newTab")
-                    MediaContent().tabItem { Label("Media", systemImage: "play.circle") }.tag("media")
-                    AdvancedContent().tabItem { Label("Advanced", systemImage: "gearshape.2") }.tag("advanced")
-                    AboutContent().tabItem { Label("About", systemImage: "info.circle") }.tag("about")
-                }
-            }
+        TabView(selection: $selectedPage) {
+            ShieldsPrivacyContent().tabItem { Label("Shields", systemImage: "checkmark.shield") }.tag("shields")
+            FilterListsView().tabItem { Label("Filters", systemImage: "line.3.horizontal.decrease") }.tag("filters")
+            SearchEnginesContent().tabItem { Label("Search", systemImage: "magnifyingglass") }.tag("search")
+            AppearanceContent().tabItem { Label("Appearance", systemImage: "paintpalette") }.tag("appearance")
+            NewTabContent().tabItem { Label("New Tab", systemImage: "square.grid.2x2") }.tag("newTab")
+            MediaContent().tabItem { Label("Media", systemImage: "play.circle") }.tag("media")
+            AdvancedContent().tabItem { Label("Advanced", systemImage: "gearshape.2") }.tag("advanced")
+            AboutContent().tabItem { Label("About", systemImage: "info.circle") }.tag("about")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(.ultraThinMaterial)
